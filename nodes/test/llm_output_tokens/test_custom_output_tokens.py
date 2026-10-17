@@ -329,17 +329,28 @@ def test_gemini_a_catalogue_profile_sends_its_limit(monkeypatch):
     assert _gemini_sent_limit(chat) == expected
 
 
-@pytest.mark.parametrize('profile', ['gemini-2_0-flash', 'gemini-2_0-flash-lite'])
-def test_gemini_2_0_profiles_send_googles_8192_limit(monkeypatch, profile):
-    """Gemini 2.0 Flash and Flash Lite write at most 8,192 tokens.
+@pytest.mark.parametrize(
+    ('profile', 'google_limit'),
+    [
+        ('gemini-2_0-flash', 8192),
+        ('gemini-2_0-flash-lite', 8192),
+        ('gemini-3_1-flash-image-preview', 32768),
+        ('models-gemini-3-1-flash-lite-image', 4096),
+    ],
+)
+def test_gemini_profiles_send_no_more_than_google_allows(monkeypatch, profile, google_limit):
+    """These profiles declared more than Google's documented output limit.
 
-    Their profiles declared 65,535 and 65,536 by hand, which did no harm while the
-    limit was never sent. Now that it is, a value above Google's maximum would fail
-    the request, so the expected value is fixed here rather than read from the file.
+    Gemini 2.0 Flash and Flash Lite carried 65,535 and 65,536 by hand; the two image
+    models carried OpenRouter's 58,982. That did no harm while the limit was never
+    sent. Now that it is, a value above the model's maximum fails the request, so
+    the expected values are Google's (https://ai.google.dev/gemini-api/docs/models),
+    fixed here rather than read from the file. They are pinned in
+    sync_models.config.json so the model sync keeps them.
     """
     chat = _start_gemini_node(monkeypatch, {'profile': profile, profile: {'apikey': 'k'}})
 
-    assert _gemini_sent_limit(chat) == 8192
+    assert _gemini_sent_limit(chat) == google_limit
 
 
 def test_gemini_the_old_output_tokens_key_is_named_not_used(monkeypatch):
