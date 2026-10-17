@@ -264,11 +264,13 @@ class _RecordingGenaiClient:
     """Stand-in for google.genai.Client that records each generate_content call."""
 
     def __init__(self, **kwargs):
+        """Accept the real constructor's arguments (api_key, ...) and start an empty call log."""
         self.calls = []
         client = self
 
         class _Models:
             def generate_content(self, **call):
+                """Record the call's arguments and answer with a text-only response."""
                 client.calls.append(call)
                 return types.SimpleNamespace(text='ok', usage_metadata=None)
 
@@ -325,6 +327,19 @@ def test_gemini_a_catalogue_profile_sends_its_limit(monkeypatch):
     chat = _start_gemini_node(monkeypatch, {'profile': profile, profile: {'apikey': 'k'}})
 
     assert _gemini_sent_limit(chat) == expected
+
+
+@pytest.mark.parametrize('profile', ['gemini-2_0-flash', 'gemini-2_0-flash-lite'])
+def test_gemini_2_0_profiles_send_googles_8192_limit(monkeypatch, profile):
+    """Gemini 2.0 Flash and Flash Lite write at most 8,192 tokens.
+
+    Their profiles declared 65,535 and 65,536 by hand, which did no harm while the
+    limit was never sent. Now that it is, a value above Google's maximum would fail
+    the request, so the expected value is fixed here rather than read from the file.
+    """
+    chat = _start_gemini_node(monkeypatch, {'profile': profile, profile: {'apikey': 'k'}})
+
+    assert _gemini_sent_limit(chat) == 8192
 
 
 def test_gemini_the_old_output_tokens_key_is_named_not_used(monkeypatch):

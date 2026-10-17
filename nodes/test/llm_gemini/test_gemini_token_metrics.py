@@ -115,6 +115,7 @@ def _make_chat(response: _Response):
 
     class _Models:
         def generate_content(self, model: str, contents: str, config: Any = None) -> _Response:
+            """Answer every call with the given response."""
             return response
 
     chat = _node.Chat.__new__(_node.Chat)
@@ -242,6 +243,7 @@ def test_a_text_free_response_is_asked_once_not_retried():
 
     class _Models:
         def generate_content(self, model: str, contents: str, config: Any = None) -> _Response:
+            """Count the call and answer with the blocked response."""
             calls.append(contents)
             return blocked
 
