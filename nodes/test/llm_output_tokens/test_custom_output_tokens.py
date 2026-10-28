@@ -299,10 +299,11 @@ def _start_gemini_node(monkeypatch, conn_config: dict, warnings: list | None = N
     return module.Chat('llm_gemini', conn_config, {})
 
 
-def _gemini_sent_limit(chat) -> int:
-    """The max_output_tokens the node sent to Google on one request."""
+def _gemini_sent_limit(chat) -> int | None:
+    """The max_output_tokens the node sent to Google on one request, or None when it sent none."""
     chat._chat('hi')
-    return chat._client.calls[-1]['config']['max_output_tokens']
+    config = chat._client.calls[-1]['config']
+    return config['max_output_tokens'] if config else None
 
 
 _GEMINI_CUSTOM = {'model': 'models/my-model', 'apikey': 'k', 'modelTotalTokens': 1000000}
@@ -353,17 +354,32 @@ def test_gemini_profiles_send_no_more_than_google_allows(monkeypatch, profile, g
     assert _gemini_sent_limit(chat) == google_limit
 
 
+def test_gemini_a_custom_model_with_no_output_limit_sends_none(monkeypatch):
+    """Output Tokens left empty on a Custom model: Google gets no limit and uses the model's own maximum.
+
+    The Custom profile's default, 65,536, is only inherited. Sending it would fail every
+    Custom model whose cap is lower, such as models/gemini-2.5-flash-image (32,768),
+    which worked before the node sent a limit. ChatBase still plans with the default.
+    """
+    custom_default = _service('llm_gemini/services.json')['preconfig']['profiles']['custom']['modelOutputTokens']
+
+    chat = _start_gemini_node(monkeypatch, {'profile': 'custom', 'custom': dict(_GEMINI_CUSTOM)})
+
+    assert chat.getOutputTokens() == custom_default
+    assert _gemini_sent_limit(chat) is None
+
+
 def test_gemini_the_old_output_tokens_key_is_named_not_used(monkeypatch):
-    """A pipeline saved with the old "outputTokens" key keeps the limit it ran with, and is told the fix.
+    """A pipeline saved with the old "outputTokens" key runs as it did, and is told the fix.
 
     The value was never read, so honouring it now would change those pipelines'
-    behaviour without anyone asking. The misnamed-key warning names the real key.
+    behaviour without anyone asking: as before, Google receives no limit. The
+    misnamed-key warning names the real key.
     """
     warnings = []
     conn = {'profile': 'custom', 'custom': {**_GEMINI_CUSTOM, 'outputTokens': 8192}}
 
     chat = _start_gemini_node(monkeypatch, conn, warnings)
 
-    custom_default = _service('llm_gemini/services.json')['preconfig']['profiles']['custom']['modelOutputTokens']
-    assert _gemini_sent_limit(chat) == custom_default
+    assert _gemini_sent_limit(chat) is None
     assert any('"outputTokens"' in w and 'did you mean "modelOutputTokens"' in w for w in warnings)

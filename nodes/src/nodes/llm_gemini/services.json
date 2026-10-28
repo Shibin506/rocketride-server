@@ -450,7 +450,7 @@
 		"gemini.modelOutputTokens": {
 			"type": "integer",
 			"title": "Output Tokens",
-			"description": "Most tokens the model may write in one reply (at least 1,024), sent to Google as max_output_tokens. Leave it empty to keep the custom default of 65,536. Thinking models count their thinking against this limit: set it well above the reply you expect, or they can spend it all thinking and return nothing. It cannot exceed Total Tokens; a larger value is lowered to it.",
+			"description": "Most tokens the model may write in one reply (at least 1,024), sent to Google as max_output_tokens. Leave it empty to send no limit, so Google uses the model's own maximum. Thinking models count their thinking against this limit: set it well above the reply you expect, or they can spend it all thinking and return nothing. It cannot exceed Total Tokens; a larger value is lowered to it.",
 			"minimum": 1024,
 			"optional": true
 		},

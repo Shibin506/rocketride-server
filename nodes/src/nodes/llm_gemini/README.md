@@ -93,8 +93,9 @@ context window, and output limit, so most pipelines need no other settings.
 
 Select `custom` to enter a Gemini model identifier such as
 `models/gemini-2.5-pro`, its combined input and output token limit, and its output
-token limit. The custom defaults are 1,114,112 total tokens and 65,536 output
-tokens; set both to the actual limits of the model you select.
+token limit. The custom default for total tokens is 1,114,112; set it to the model's
+actual context window. Leave the output limit empty to send Google no limit, so the
+model's own maximum applies; a value you enter is sent as `max_output_tokens`.
 
 ## Authentication
 
@@ -139,7 +140,7 @@ with a mocked `google.genai`, so no real API key is required. Set `ROCKETRIDE_MO
 |---|---|---|---|
 | `gemini.apikey` | `string` | **API Key**<br/>Google AI Developer API key |  |
 | `gemini.model` | `string` | **Model**<br/>Gemini model |  |
-| `gemini.modelOutputTokens` | `integer` | **Output Tokens**<br/>Most tokens the model may write in one reply (at least 1,024), sent to Google as max_output_tokens. Leave it empty to keep the custom default of 65,536. Thinking models count their thinking against this limit: set it well above the reply you expect, or they can spend it all thinking and return nothing. It cannot exceed Total Tokens; a larger value is lowered to it. |  |
+| `gemini.modelOutputTokens` | `integer` | **Output Tokens**<br/>Most tokens the model may write in one reply (at least 1,024), sent to Google as max_output_tokens. Leave it empty to send no limit, so Google uses the model's own maximum. Thinking models count their thinking against this limit: set it well above the reply you expect, or they can spend it all thinking and return nothing. It cannot exceed Total Tokens; a larger value is lowered to it. |  |
 | `gemini.modelTotalTokens` | `number` | **Total Tokens**<br/>Maximum number of input + output tokens |  |
 | `gemini.profile` | `string` | **Model**<br/>Gemini LLM model | `"gemini-3_1-pro-preview"` |
 
