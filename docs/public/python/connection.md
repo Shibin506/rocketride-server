@@ -56,6 +56,7 @@ address before connecting: `https://` and `wss://` both resolve to a secure `wss
 connection, while `http://`, `ws://`, and a bare `host:port` resolve to plain
 `ws://`. For RocketRide Cloud use `https://api.rocketride.ai` (or the equivalent
 `wss://api.rocketride.ai`); for a local engine use `ws://localhost:5565`.
+A bare port such as `5590` means that port on `localhost`.
 
 **Caution:** against a Cloud endpoint always use `https://` or `wss://` — an
 `http://` or `ws://` URI (or a bare `host:port`) silently downgrades to an

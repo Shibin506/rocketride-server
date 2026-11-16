@@ -41,6 +41,7 @@ import tempfile
 from typing import Any, Dict
 
 from rocketlib import warning
+from rocketride import CONST_DEFAULT_WEB_HOST
 
 from ai.constants import CONST_TASK_DATA_PATH
 from ai.proc_privacy import make_process_private, should_make_private
@@ -90,7 +91,7 @@ def _normalize_modelserver(address: str) -> str:
     port has none. HOST:PORT and full URLs pass through unchanged.
     """
     if address and address.isdigit():
-        return f'localhost:{address}'
+        return f'{CONST_DEFAULT_WEB_HOST}:{address}'
     return address
 
 

@@ -29,7 +29,7 @@ import { redactProtocolMessage } from './core/TransportBase.js';
 import { DAPClient } from './core/DAPClient.js';
 import { DAPMessage, EventCallback, RocketRideClientConfig, ConnectCallback, DisconnectCallback, ConnectErrorCallback, ConnectResult, ServerInfoResult, TraceType } from './types/index.js';
 import { TASK_STATUS, UPLOAD_RESULT, PIPELINE_RESULT, PipelineConfig, DashboardResponse, ListPageRequest, ListConnectionsResponse, ListTasksResponse, ServicesResponse, ServiceDefinition, ValidationResult, CProfileStatusResponse, CProfileStopResponse, CProfileReportResponse, CProfileReportTreeResponse, CProfileThreadsResponse } from './types/index.js';
-import { CONST_DEFAULT_WEB_CLOUD, CONST_DEFAULT_WEB_PROTOCOL, CONST_DEFAULT_WEB_PORT } from './constants.js';
+import { CONST_DEFAULT_WEB_CLOUD, CONST_DEFAULT_WEB_HOST, CONST_DEFAULT_WEB_PROTOCOL, CONST_DEFAULT_WEB_PORT } from './constants.js';
 import { Question } from './schema/Question.js';
 import { AccountApi } from './account.js';
 import { BillingApi } from './billing.js';
@@ -516,6 +516,7 @@ export class RocketRideClient extends DAPClient {
 	 * Normalize a user-provided URI into a fully-formed HTTP/HTTPS URL.
 	 *
 	 * - Bare hostnames (e.g. "localhost", "my-server:5565") get `http://` prepended.
+	 * - A bare port (e.g. "5590") means that port on localhost, as in the Python SDK.
 	 * - Non-cloud URIs without a port default to 5565.
 	 *
 	 * Use this when you need a parseable URL from free-form user input before
@@ -523,6 +524,11 @@ export class RocketRideClient extends DAPClient {
 	 */
 	public static normalizeUri(uri: string): string {
 		let normalized = uri.trim();
+		// A bare port names a port, not a host: without this, the URL parser
+		// reads '5590' as the IPv4 address 0.0.21.214 and adds port 5565.
+		if (/^\d+$/.test(normalized)) {
+			normalized = `${CONST_DEFAULT_WEB_HOST}:${normalized}`;
+		}
 		if (normalized && !/^[a-zA-Z]+:\/\//.test(normalized)) {
 			normalized = `${CONST_DEFAULT_WEB_PROTOCOL}${normalized}`;
 		}
